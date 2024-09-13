@@ -3,7 +3,7 @@
   "name": "Text-to-Speech Extension",
   "version": "1.0",
   "description": "Reads selected text on a web page.",
-  "permissions": ["activeTab", "storage"],
+  "permissions": ["activeTab", "storage", "contextMenus"],
   "background": {
     "service_worker": "background.js"
   },

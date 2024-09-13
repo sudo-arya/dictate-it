@@ -13,3 +13,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
   }
 });
+// Create the context menu item
+chrome.contextMenus.create({
+  id: "speakText",
+  title: "Speak Selected Text",
+  contexts: ["selection"]
+});
+
+// Handle context menu item click
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === "speakText") {
+    const selectedText = info.selectionText;
+
+    chrome.tabs.sendMessage(tab.id, {
+      action: "speak",
+      text: selectedText,
+      pitch: 1, // Set default values or get from storage
+      rate: 1,
+      volume: 1
+    });
+  }
+});
