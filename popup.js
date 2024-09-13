@@ -1,19 +1,48 @@
 document.addEventListener("DOMContentLoaded", () => {
   const textArea = document.getElementById("text");
+  const voiceSelect = document.getElementById("voice");
   const pitchInput = document.getElementById("pitch");
   const rateInput = document.getElementById("rate");
   const volumeInput = document.getElementById("volume");
+  const pitchValue = document.getElementById("pitchValue");
+  const rateValue = document.getElementById("rateValue");
+  const volumeValue = document.getElementById("volumeValue");
   const speakButton = document.getElementById("speak");
+
+  function populateVoices() {
+    const voices = speechSynthesis.getVoices();
+    voiceSelect.innerHTML = "";
+    voices.forEach((voice, index) => {
+      const option = document.createElement("option");
+      option.value = index;
+      option.textContent = voice.name;
+      voiceSelect.appendChild(option);
+    });
+  }
+
+  populateVoices();
+  speechSynthesis.onvoiceschanged = populateVoices;
 
   chrome.storage.local.get("selectedText", (data) => {
     textArea.value = data.selectedText || "";
   });
+
+  function updateValueDisplay() {
+    pitchValue.textContent = pitchInput.value;
+    rateValue.textContent = rateInput.value;
+    volumeValue.textContent = volumeInput.value;
+  }
+
+  pitchInput.addEventListener("input", updateValueDisplay);
+  rateInput.addEventListener("input", updateValueDisplay);
+  volumeInput.addEventListener("input", updateValueDisplay);
 
   speakButton.addEventListener("click", () => {
     const text = textArea.value;
     const pitch = parseFloat(pitchInput.value);
     const rate = parseFloat(rateInput.value);
     const volume = parseFloat(volumeInput.value);
+    const voiceIndex = parseInt(voiceSelect.value);
 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs.length > 0) {
@@ -25,6 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
             pitch,
             rate,
             volume,
+            voiceIndex,
           },
           (response) => {
             if (chrome.runtime.lastError) {
@@ -37,7 +67,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           }
         );
+      } else {
+        console.error("No active tab found.");
       }
     });
   });
+
+  // Initialize value display
+  updateValueDisplay();
 });

@@ -3,13 +3,26 @@
 <head>
   <title>Text-to-Speech Extension</title>
   <style>
-    /* Add some basic styling */
     body {
       width: 300px;
       font-family: Arial, sans-serif;
     }
     .control {
       margin-bottom: 10px;
+    }
+    .slider-container {
+      display: flex;
+      align-items: center;
+    }
+    .slider-container label {
+      margin-right: 10px;
+    }
+    .slider-container input[type="range"] {
+      flex-grow: 1;
+    }
+    .slider-container span {
+      width: 50px;
+      text-align: right;
     }
   </style>
 </head>
@@ -19,18 +32,26 @@
   <textarea id="text" placeholder="Selected text will appear here"></textarea>
   
   <div class="control">
+    <label for="voice">Voice</label>
+    <select id="voice"></select>
+  </div>
+  
+  <div class="control slider-container">
     <label for="pitch">Pitch</label>
     <input type="range" id="pitch" min="0.1" max="2" step="0.1" value="1">
+    <span id="pitchValue">1</span>
   </div>
   
-  <div class="control">
+  <div class="control slider-container">
     <label for="rate">Rate</label>
     <input type="range" id="rate" min="0.1" max="2" step="0.1" value="1">
+    <span id="rateValue">1</span>
   </div>
   
-  <div class="control">
+  <div class="control slider-container">
     <label for="volume">Volume</label>
     <input type="range" id="volume" min="0" max="1" step="0.1" value="1">
+    <span id="volumeValue">1</span>
   </div>
   
   <button id="speak">Speak</button>
