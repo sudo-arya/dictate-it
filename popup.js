@@ -68,7 +68,7 @@ chrome.storage.local.get(
     const volume = parseFloat(volumeInput.value);
     const voiceIndex = parseInt(voiceSelect.value);
     const pauseWords = parseInt(pauseWordsInput.value);
-    const pauseDelay = parseInt(pauseDelayInput.value)*1000 || 0; // Default to 0 seconds if input is empty
+    const pauseDelay = parseInt(pauseDelayInput.value) || 0; // Default to 0 seconds if input is empty
 
     chrome.storage.local.set({
       pitch,
