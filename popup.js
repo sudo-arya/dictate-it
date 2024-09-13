@@ -25,9 +25,31 @@ document.addEventListener("DOMContentLoaded", () => {
   populateVoices();
   speechSynthesis.onvoiceschanged = populateVoices;
 
-  chrome.storage.local.get("selectedText", (data) => {
+//   chrome.storage.local.get("selectedText", (data) => {
+//     textArea.value = data.selectedText || "";
+//   });
+
+chrome.storage.local.get(
+  {
+    selectedText: "",
+    pitch: 1,
+    rate: 1,
+    volume: 1,
+    voiceIndex: 0,
+    pauseWords: 5,
+    pauseDelay: 0,
+  },
+  (data) => {
     textArea.value = data.selectedText || "";
-  });
+    pitchInput.value = data.pitch;
+    rateInput.value = data.rate;
+    volumeInput.value = data.volume;
+    voiceSelect.value = data.voiceIndex;
+    pauseWordsInput.value = data.pauseWords;
+    pauseDelayInput.value = data.pauseDelay;
+    updateValueDisplay();
+  }
+);
 
   function updateValueDisplay() {
     pitchValue.textContent = pitchInput.value;
@@ -46,7 +68,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const volume = parseFloat(volumeInput.value);
     const voiceIndex = parseInt(voiceSelect.value);
     const pauseWords = parseInt(pauseWordsInput.value);
-    const pauseDelay = parseInt(pauseDelayInput.value) * 1000; // Convert to milliseconds
+    const pauseDelay = parseInt(pauseDelayInput.value)*1000 || 0; // Default to 0 seconds if input is empty
+
+    chrome.storage.local.set({
+      pitch,
+      rate,
+      volume,
+      voiceIndex,
+      pauseWords,
+      pauseDelay,
+    });
 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs.length > 0) {
