@@ -1,26 +1,43 @@
-console.log("Content script loaded");
+let currentUtterance = null;
+let voices = [];
+let pauseWords = 0;
+let pauseDelay = 0;
+let wordsCounter = 0;
 
-let currentUtterance = null; // To track the current speech utterance
+function populateVoices() {
+  voices = speechSynthesis.getVoices();
+}
+
+speechSynthesis.onvoiceschanged = populateVoices;
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("Message received:", request);
 
   if (request.action === "speak") {
     if (currentUtterance) {
-      // Stop the current utterance if it's still speaking
       window.speechSynthesis.cancel();
     }
-    const utterance = new SpeechSynthesisUtterance(request.text);
-    const voices = speechSynthesis.getVoices();
 
-    // Check if voiceIndex is defined and valid
+    pauseWords = request.pauseWords || 0;
+    pauseDelay = request.pauseDelay || 0;
+
+    const text = request.text;
+    const words = text.split(/\s+/);
+
+    if (voices.length === 0) {
+      // Voices not loaded yet
+      return sendResponse({ status: "error", message: "Voices not loaded" });
+    }
+
+    const utterance = new SpeechSynthesisUtterance();
+    utterance.text = "";
+
     if (
       request.voiceIndex !== undefined &&
       request.voiceIndex < voices.length
     ) {
       utterance.voice = voices[request.voiceIndex];
     } else {
-      // Default to the first available voice if index is invalid
       utterance.voice = voices[0];
     }
 
@@ -28,16 +45,41 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     utterance.rate = request.rate;
     utterance.volume = request.volume;
 
-    // Set the current utterance to this new one
-    currentUtterance = utterance;
+    function speakChunk(start) {
+      if (start >= words.length) {
+        sendResponse({ status: "success" });
+        return;
+      }
 
-    utterance.onend = () => {
-      // Clear the reference when the utterance ends
-      currentUtterance = null;
+      const chunk = words.slice(start, start + pauseWords).join(" ");
+      utterance.text = chunk;
+      window.speechSynthesis.speak(utterance);
+
+      utterance.onend = () => {
+        if (start + pauseWords < words.length) {
+          setTimeout(() => {
+            speakChunk(start + pauseWords);
+          }, pauseDelay);
+        } else {
+          sendResponse({ status: "success" });
+        }
+      };
+    }
+
+    utterance.onstart = () => {
+      wordsCounter = 0;
     };
 
-    window.speechSynthesis.speak(utterance);
-    sendResponse({ status: "success" });
+    utterance.onboundary = (event) => {
+      if (event.name === "word") {
+        wordsCounter++;
+      }
+    };
+
+    currentUtterance = utterance;
+    speakChunk(0);
+
+    return true; // Keep the message channel open
   }
 });
 

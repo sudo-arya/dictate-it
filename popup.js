@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const rateValue = document.getElementById("rateValue");
   const volumeValue = document.getElementById("volumeValue");
   const speakButton = document.getElementById("speak");
+  const pauseWordsInput = document.getElementById("pauseWords");
+  const pauseDelayInput = document.getElementById("pauseDelay");
 
   function populateVoices() {
     const voices = speechSynthesis.getVoices();
@@ -43,6 +45,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const rate = parseFloat(rateInput.value);
     const volume = parseFloat(volumeInput.value);
     const voiceIndex = parseInt(voiceSelect.value);
+    const pauseWords = parseInt(pauseWordsInput.value);
+    const pauseDelay = parseInt(pauseDelayInput.value) * 1000; // Convert to milliseconds
 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs.length > 0) {
@@ -55,6 +59,8 @@ document.addEventListener("DOMContentLoaded", () => {
             rate,
             volume,
             voiceIndex,
+            pauseWords,
+            pauseDelay,
           },
           (response) => {
             if (chrome.runtime.lastError) {
@@ -73,6 +79,5 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Initialize value display
   updateValueDisplay();
 });

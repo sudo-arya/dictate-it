@@ -1,7 +1,11 @@
-chrome.contextMenus.create({
-  id: "speakText",
-  title: "Speak Selected Text",
-  contexts: ["selection"],
+// background.js
+
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: "speakText",
+    title: "Speak Selected Text",
+    contexts: ["selection"],
+  });
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
@@ -15,6 +19,8 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         rate: 1,
         volume: 1,
         voiceIndex: 0,
+        pauseWords: 5,
+        pauseDelay: 2000,
       },
       (response) => {
         if (chrome.runtime.lastError) {
