@@ -33,33 +33,44 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         rate: 1,
         volume: 1,
         voiceIndex: 0,
-        pauseWords: 5,
+        pauseWords: 999999,
         pauseDelay: 0,
         dictateMode: false,
       },
       (settings) => {
-        chrome.tabs.sendMessage(
-          tab.id,
-          {
-            action: "speak",
-            text: info.selectionText,
-            pitch: settings.pitch,
-            rate: settings.rate,
-            volume: settings.volume,
-            voiceIndex: settings.voiceIndex,
-            pauseWords: settings.dictateMode ? settings.pauseWords : 0,
-            pauseDelay: settings.dictateMode ? settings.pauseDelay : 0,
-            dictateMode: settings.dictateMode,
-          },
-          (response) => {
-            if (chrome.runtime.lastError) {
-              console.error("Error sending message:", chrome.runtime.lastError);
-            } else {
-              console.log("Message sent successfully:", response);
-            }
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (tabs.length > 0 && tab) {
+            chrome.tabs.sendMessage(
+              tab.id,
+              {
+                action: "speak",
+                text: info.selectionText,
+                pitch: settings.pitch,
+                rate: settings.rate,
+                volume: settings.volume,
+                voiceIndex: settings.voiceIndex,
+                pauseWords: settings.dictateMode ? settings.pauseWords : 0,
+                pauseDelay: settings.dictateMode ? settings.pauseDelay : 0,
+                dictateMode: settings.dictateMode,
+              },
+              (response) => {
+                if (chrome.runtime.lastError) {
+                  console.error(
+                    "Error sending message:",
+                    chrome.runtime.lastError.message
+                  );
+                } else {
+                  console.log("Message sent successfully:", response);
+                }
+              }
+            );
+          } else {
+            console.error("No active tab or tab is undefined.");
           }
-        );
+        });
       }
     );
+    return true; // Keeps the message channel open for async response
   }
 });
+
