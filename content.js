@@ -88,6 +88,70 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     speakChunk(0); // Start speaking
 
     return true; // Keep the message channel open for asynchronous response
+  } else if (request.action === "updateSettings") {
+    // Handle TTS settings update
+    if (currentUtterance) {
+      window.speechSynthesis.cancel(); // Stop the current utterance
+    }
+
+    // Update the settings and restart speech
+    chrome.storage.local.get(
+      {
+        pitch: 1,
+        rate: 1,
+        volume: 1,
+        voiceIndex: 0,
+        pauseWords: 99999,
+        pauseDelay: 0,
+        dictateMode: false,
+      },
+      (settings) => {
+        const updatedUtterance = new SpeechSynthesisUtterance();
+        updatedUtterance.voice = voices[settings.voiceIndex] || voices[0];
+        updatedUtterance.pitch = settings.pitch;
+        updatedUtterance.rate = settings.rate;
+        updatedUtterance.volume = settings.volume;
+
+        // Start speaking with updated settings
+        const text = request.text || "";
+        const words = text.split(/\s+/);
+        speakChunk(0); // Reuse function to start speaking
+
+        function speakChunk(start) {
+          if (start >= words.length) {
+            // All chunks have been spoken
+            sendResponse({ status: "success" });
+            return;
+          }
+
+          const chunk = words
+            .slice(start, start + settings.pauseWords)
+            .join(" ");
+          updatedUtterance.text = chunk;
+          window.speechSynthesis.speak(updatedUtterance);
+
+          updatedUtterance.onend = () => {
+            if (start + settings.pauseWords < words.length) {
+              setTimeout(() => {
+                speakChunk(start + settings.pauseWords); // Proceed to the next chunk after pause
+              }, settings.pauseDelay);
+            } else {
+              // Finish speaking
+              sendResponse({ status: "success" });
+            }
+          };
+        }
+
+        currentUtterance = updatedUtterance; // Update currentUtterance
+      }
+    );
+    return true; // Keep the message channel open for asynchronous response
+  } else if (request.action === "stopTTS") {
+    if (currentUtterance) {
+      window.speechSynthesis.cancel(); // Stop TTS if active
+      currentUtterance = null; // Clear current utterance reference
+    }
+    sendResponse({ status: "success" });
   }
 });
 

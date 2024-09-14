@@ -86,33 +86,6 @@ document.addEventListener("DOMContentLoaded", () => {
       dictateMode,
     });
 
-    // Stop any ongoing TTS if it's active
-    if (ttsActive) {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs.length > 0) {
-          chrome.tabs.sendMessage(
-            tabs[0].id,
-            { action: "stop" }, // Send a stop action to the content script
-            (response) => {
-              if (chrome.runtime.lastError) {
-                console.error(
-                  "Error stopping TTS:",
-                  chrome.runtime.lastError.message
-                );
-              } else {
-                console.log("TTS stopped successfully:", response);
-                ttsActive = false; // Update flag
-                // Optionally, restart TTS here if desired
-                // startSpeaking(); // Uncomment this if you want to restart TTS immediately
-              }
-            }
-          );
-        } else {
-          console.error("No active tab found.");
-        }
-      });
-    }
-
     // Send the updated settings to the content script
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs.length > 0) {
@@ -136,6 +109,8 @@ document.addEventListener("DOMContentLoaded", () => {
               );
             } else {
               console.log("Settings updated successfully:", response);
+              // Restart TTS with new settings
+              restartTTS();
             }
           }
         );
@@ -145,30 +120,48 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Add event listeners for inputs to automatically update settings
-  textArea.addEventListener("input", sendUpdatedSettings);
-  pitchInput.addEventListener("input", () => {
-    updateValueDisplay();
-    sendUpdatedSettings();
-  });
-  rateInput.addEventListener("input", () => {
-    updateValueDisplay();
-    sendUpdatedSettings();
-  });
-  volumeInput.addEventListener("input", () => {
-    updateValueDisplay();
-    sendUpdatedSettings();
-  });
-  voiceSelect.addEventListener("change", sendUpdatedSettings);
-  pauseWordsInput.addEventListener("input", sendUpdatedSettings);
-  pauseDelayInput.addEventListener("input", sendUpdatedSettings);
-  dictateCheckbox.addEventListener("change", () => {
-    togglePauseSettings(dictateCheckbox.checked);
-    sendUpdatedSettings();
-  });
+  function restartTTS() {
+    const text = textArea.value;
+    const pitch = parseFloat(pitchInput.value);
+    const rate = parseFloat(rateInput.value);
+    const volume = parseFloat(volumeInput.value) / 100; // Scale volume from 0-100 to 0-1
+    const voiceIndex = parseInt(voiceSelect.value);
+    const pauseWords = parseInt(pauseWordsInput.value);
+    const pauseDelay = parseInt(pauseDelayInput.value) || 0; // Default to 0 seconds if input is empty
+    const dictateMode = dictateCheckbox.checked;
 
-  // Speak Button Click Event: Trigger speech
-  speakButton.addEventListener("click", () => {
+    // Stop any ongoing TTS if it's active
+    if (ttsActive) {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs.length > 0) {
+          chrome.tabs.sendMessage(
+            tabs[0].id,
+            { action: "stop" }, // Send a stop action to the content script
+            (response) => {
+              if (chrome.runtime.lastError) {
+                console.error(
+                  "Error stopping TTS:",
+                  chrome.runtime.lastError.message
+                );
+              } else {
+                console.log("TTS stopped successfully:", response);
+                ttsActive = false; // Update flag
+                // Start TTS with new settings
+                startSpeaking();
+              }
+            }
+          );
+        } else {
+          console.error("No active tab found.");
+        }
+      });
+    } else {
+      // Start TTS if it wasn't active
+      startSpeaking();
+    }
+  }
+
+  function startSpeaking() {
     const text = textArea.value;
     const pitch = parseFloat(pitchInput.value);
     const rate = parseFloat(rateInput.value);
@@ -210,7 +203,32 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("No active tab found.");
       }
     });
+  }
+
+  // Add event listeners for inputs to automatically update settings
+  textArea.addEventListener("input", sendUpdatedSettings);
+  pitchInput.addEventListener("input", () => {
+    updateValueDisplay();
+    sendUpdatedSettings();
   });
+  rateInput.addEventListener("input", () => {
+    updateValueDisplay();
+    sendUpdatedSettings();
+  });
+  volumeInput.addEventListener("input", () => {
+    updateValueDisplay();
+    sendUpdatedSettings();
+  });
+  voiceSelect.addEventListener("change", sendUpdatedSettings);
+  pauseWordsInput.addEventListener("input", sendUpdatedSettings);
+  pauseDelayInput.addEventListener("input", sendUpdatedSettings);
+  dictateCheckbox.addEventListener("change", () => {
+    togglePauseSettings(dictateCheckbox.checked);
+    sendUpdatedSettings();
+  });
+
+  // Speak Button Click Event: Trigger speech
+  speakButton.addEventListener("click", startSpeaking);
 
   updateValueDisplay();
 });
