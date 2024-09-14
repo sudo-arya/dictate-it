@@ -18,8 +18,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       window.speechSynthesis.cancel();
     }
 
-    pauseWords = request.pauseWords || 0;
-    pauseDelay = request.pauseDelay || 0;
+    // Set pauseWords and pauseDelay based on dictateMode
+    const useDictateMode = request.dictateMode || false;
+    pauseWords = useDictateMode ? request.pauseWords || 0 : 9999999;
+    pauseDelay = useDictateMode ? request.pauseDelay || 0 : 0;
 
     const text = request.text;
     const words = text.split(/\s+/);

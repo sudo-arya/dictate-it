@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const speakButton = document.getElementById("speak");
   const pauseWordsInput = document.getElementById("pauseWords");
   const pauseDelayInput = document.getElementById("pauseDelay");
+  const dictateCheckbox = document.getElementById("dictate");
 
   function populateVoices() {
     const voices = speechSynthesis.getVoices();
@@ -38,6 +39,7 @@ chrome.storage.local.get(
     voiceIndex: 0,
     pauseWords: 5,
     pauseDelay: 0,
+    dictateMode: false,
   },
   (data) => {
     textArea.value = data.selectedText || "";
@@ -47,7 +49,10 @@ chrome.storage.local.get(
     voiceSelect.value = data.voiceIndex;
     pauseWordsInput.value = data.pauseWords;
     pauseDelayInput.value = data.pauseDelay;
+    dictateCheckbox.checked = data.dictateMode;
+
     updateValueDisplay();
+    togglePauseSettings(data.dictateMode);
   }
 );
 
@@ -56,10 +61,19 @@ chrome.storage.local.get(
     rateValue.textContent = rateInput.value;
     volumeValue.textContent = volumeInput.value;
   }
+  function togglePauseSettings(enabled) {
+    pauseWordsInput.disabled = !enabled;
+    pauseDelayInput.disabled = !enabled;
+  }
 
   pitchInput.addEventListener("input", updateValueDisplay);
   rateInput.addEventListener("input", updateValueDisplay);
   volumeInput.addEventListener("input", updateValueDisplay);
+
+  dictateCheckbox.addEventListener("change", () => {
+    const isChecked = dictateCheckbox.checked;
+    togglePauseSettings(isChecked);
+  });
 
   speakButton.addEventListener("click", () => {
     const text = textArea.value;
@@ -69,15 +83,17 @@ chrome.storage.local.get(
     const voiceIndex = parseInt(voiceSelect.value);
     const pauseWords = parseInt(pauseWordsInput.value);
     const pauseDelay = parseInt(pauseDelayInput.value) || 0; // Default to 0 seconds if input is empty
+    const dictateMode = dictateCheckbox.checked;
 
-    chrome.storage.local.set({
-      pitch,
-      rate,
-      volume,
-      voiceIndex,
-      pauseWords,
-      pauseDelay,
-    });
+     chrome.storage.local.set({
+       pitch,
+       rate,
+       volume,
+       voiceIndex,
+       pauseWords,
+       pauseDelay,
+       dictateMode,
+     });
 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs.length > 0) {
@@ -92,6 +108,7 @@ chrome.storage.local.get(
             voiceIndex,
             pauseWords,
             pauseDelay,
+            dictateMode,
           },
           (response) => {
             if (chrome.runtime.lastError) {

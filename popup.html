@@ -1,70 +1,247 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Text-to-Speech Extension</title>
   <style>
     body {
-      width: 300px;
       font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #f0f0f0, #d9e2ec);
+      margin: 0;
+      width: fit-content;
+      height: fit-content;
+      padding: 0px;
+      color: #333;
     }
-    .control {
-      margin-bottom: 10px;
+
+    .container {
+      width: 68vw;
+      height: fit-content;
+      background-color: #fff;
+      /* border-radius: 12px; */
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      margin: auto;
+      padding-right: 60px;
+      padding-left: 60px;
+      padding-top: 10px;
+      padding-bottom: 36px;
     }
-    .slider-container {
+
+    /* Header Section */
+    .header {
       display: flex;
       align-items: center;
+      justify-content: center;
+      margin-bottom: 6px;
     }
-    .slider-container label {
-      margin-right: 10px;
-    }
-    .slider-container input[type="range"] {
-      flex-grow: 1;
-    }
-    .slider-container span {
+
+    .header img {
       width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-right: 15px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    /* Textarea */
+    textarea {
+      width: inherit;
+      height: 60px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      resize: none;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+
+    textarea:focus {
+      border-color: #4a90e2;
+    }
+
+    /* Label Styles */
+    label {
+      display: block;
+      margin-bottom: 8px;
+      margin-top: 8px;
+      font-size: 14px;
+      font-weight: bold;
+      color: #666;
+    }
+
+    /* Select Dropdown */
+    select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 8px;
+      outline: none;
+      transition: border-color 0.5s ease;
+    }
+
+    select:focus {
+      border-color: #4a90e2;
+    }
+
+    /* Checkbox */
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .checkbox-container input {
+      margin-right: 10px;
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Slider Section */
+    .slider-container {
+      margin-bottom: 4px;
+    }
+
+    .slider-container label {
+      margin-bottom: 6px;
+      display: block;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .slider-container input {
+      width: 100%;
+      margin-right: 8px;
+    }
+
+    .slider-container span {
+      display: inline-block;
+      width: 10px;
+      font-size: 16px;
       text-align: right;
+    }
+
+    /* Input for Numbers */
+    input[type="number"] {
+      width: 80%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+
+    input[type="number"]:focus {
+      border-color: #4a90e2;
+    }
+
+    /* Row for "Pause After Words" and "Pause Delay" */
+    .row {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .row .slider-container {
+      width: 48%;
+    }
+
+    /* Button */
+    button {
+      width: 100%;
+      background: linear-gradient(90deg, #4a90e2, #8a2be2);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 18px;
+      margin-top: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: linear-gradient(90deg, #357ab7, #751dd8);
+    }
+
+    button:focus {
+      outline: none;
+      box-shadow: 0 0 4px #4a90e2;
     }
   </style>
 </head>
 <body>
-  <h1>Text-to-Speech</h1>
-  
-  <textarea id="text" placeholder="Selected text will appear here"></textarea>
-  
-  <div class="control">
-    <label for="voice">Voice</label>
-    <select id="voice"></select>
-  </div>
-  
-  <div class="control slider-container">
-    <label for="pitch">Pitch</label>
-    <input type="range" id="pitch" min="0.1" max="2" step="0.1" value="1">
-    <span id="pitchValue">1</span>
-  </div>
-  
-  <div class="control slider-container">
-    <label for="rate">Rate</label>
-    <input type="range" id="rate" min="0.1" max="2" step="0.1" value="1">
-    <span id="rateValue">1</span>
-  </div>
-  
-  <div class="control slider-container">
-    <label for="volume">Volume</label>
-    <input type="range" id="volume" min="0" max="1" step="0.1" value="1">
-    <span id="volumeValue">1</span>
-  </div>
-  <div class="control slider-container">
-  <label for="pauseWords">Pause After Words</label>
-  <input type="number" id="pauseWords" min="1" value="5">
-</div>
 
-<div class="control slider-container">
-  <label for="pauseDelay">Pause Delay (s)</label>
-  <input type="number" id="pauseDelay" min="0" value="2">
-</div>
+  <div class="container">
+    <!-- Header Section with Logo and Title -->
+    <div class="header">
+      <img src="https://via.placeholder.com/40" alt="Logo">
+      <h1>Text-to-Speech</h1>
+    </div>
 
-  <button id="speak">Speak</button>
-  
+    <!-- Textarea for Input -->
+    <textarea id="text" placeholder="Selected text will appear here"></textarea>
+
+    <!-- Voice Selection -->
+    <div class="dropdown">
+      <label for="voice">Voice</label>
+      <select id="voice">
+        <!-- Options will be populated dynamically -->
+      </select>
+    </div>
+
+    <!-- Pitch Slider -->
+    <div class="slider-container">
+      <label for="pitch">Pitch - <span id="pitchValue">1</span></label>
+      <input type="range" id="pitch" min="0.1" max="2" step="0.1" value="1">
+    </div>
+
+    <!-- Rate Slider -->
+    <div class="slider-container">
+      <label for="rate">Rate - <span id="rateValue">1</span></label>
+      <input type="range" id="rate" min="0.1" max="2" step="0.1" value="1">
+    </div>
+
+    <!-- Volume Slider -->
+    <div class="slider-container">
+      <label for="volume">Volume - <span id="volumeValue">1</span></label>
+      <input type="range" id="volume" min="0" max="1" step="0.1" value="1">
+    </div>
+
+    <!-- Dictation Mode -->
+    <div class="checkbox-container">
+      <input type="checkbox" id="dictate">
+      <label for="dictate">Use Dictation Mode</label>
+    </div>
+
+    <!-- Row for Pause After Words and Pause Delay -->
+    <div class="row">
+      <!-- Pause After Words -->
+      <div class="slider-container">
+        <label for="pauseWords">Pause After Words</label>
+        <input type="number" id="pauseWords" min="1" value="5">
+      </div>
+
+      <!-- Pause Delay -->
+      <div class="slider-container">
+        <label for="pauseDelay">Pause Delay (s)</label>
+        <input type="number" id="pauseDelay" min="0" value="0">
+      </div>
+    </div>
+
+    <!-- Speak Button -->
+    <button id="speak">Speak</button>
+
+  </div>
+
   <script src="popup.js"></script>
 </body>
 </html>
