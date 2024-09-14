@@ -15,7 +15,7 @@ chrome.storage.local.get(
     rate: 1,
     volume: 1,
     voiceIndex: 0,
-    pauseWords: 5,
+    pauseWords: 99999,
     pauseDelay: 0,
     dictateMode: false,
   },

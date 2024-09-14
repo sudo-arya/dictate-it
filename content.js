@@ -15,7 +15,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.action === "speak") {
     if (currentUtterance) {
-      window.speechSynthesis.cancel();
+      window.speechSynthesis.cancel(); // Cancel any ongoing utterance
     }
 
     // Set pauseWords and pauseDelay based on dictateMode
@@ -28,11 +28,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     if (voices.length === 0) {
       // Voices not loaded yet
+      speechSynthesis.onvoiceschanged = () => {
+        populateVoices();
+        processSpeech(); // Retry once voices are loaded
+      };
       return sendResponse({ status: "error", message: "Voices not loaded" });
     }
 
     const utterance = new SpeechSynthesisUtterance();
-    utterance.text = "";
 
     if (
       request.voiceIndex !== undefined &&
@@ -47,8 +50,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     utterance.rate = request.rate;
     utterance.volume = request.volume;
 
+    // Speak text chunk by chunk
     function speakChunk(start) {
       if (start >= words.length) {
+        // All chunks have been spoken
         sendResponse({ status: "success" });
         return;
       }
@@ -60,9 +65,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       utterance.onend = () => {
         if (start + pauseWords < words.length) {
           setTimeout(() => {
-            speakChunk(start + pauseWords);
+            speakChunk(start + pauseWords); // Proceed to the next chunk after pause
           }, pauseDelay);
         } else {
+          // Finish speaking
           sendResponse({ status: "success" });
         }
       };
@@ -79,12 +85,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     };
 
     currentUtterance = utterance;
-    speakChunk(0);
+    speakChunk(0); // Start speaking
 
-    return true; // Keep the message channel open
+    return true; // Keep the message channel open for asynchronous response
   }
 });
 
+// Store selected text in Chrome's local storage for easy retrieval
 document.addEventListener("mouseup", () => {
   const selectedText = window.getSelection().toString();
   if (selectedText) {
